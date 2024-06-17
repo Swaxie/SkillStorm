@@ -74,3 +74,29 @@ int_list.remove(26)
 print(int_list)
 int_list.sort()
 print(int_list)
+
+# Challenge 1: List Comprehensions and Filtering
+print("Challenge 1------------------------------------------------")
+
+# using list comprehension to create a list of squares of integers from 1 to 10
+squares = [i**2 for i in range(1,11)]
+print(squares)
+
+# filtering for even nums
+even_squares = [square for square in squares if square % 2 == 0]
+print(even_squares)
+
+# dictionary comphrension
+squares_dict = {num:square for num,square in zip(range(1,11), squares)}
+print(squares_dict)
+
+# Challenge 2: Complex Date and Time Operations
+print("Challenge 2------------------------------------------------")
+
+# parsing string to datetime
+datetime_obj = datetime.datetime.strptime("07-04-2024", "%m-%d-%Y")
+print(datetime_obj)
+
+def weekdays_btwn(date1, date2):
+    days = 0
+    return days
