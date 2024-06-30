@@ -340,3 +340,86 @@ FROM customers c JOIN dec_cust ON dec_cust.order_customer_id = c.customer_id
 WHERE dec_cust.total_spent > (
 	SELECT AVG(dec_cust.total_spent) FROM dec_cust)
 ;
+
+-- E08
+-- Exercise 1
+-- Get all the employees who are making more than average salary within each department
+-- employees and departments tables
+USE hr_db;
+GO
+
+SELECT e.employee_id, d.department_name, e.salary, e.avg_salary_expense 
+FROM (
+	SELECT *, 
+	CAST(ROUND(AVG(e.salary) OVER 
+	(PARTITION BY e.department_id), 2) 
+	AS DECIMAL (18,2)) avg_salary_expense 
+	FROM employees e
+) e JOIN departments d
+ON e.department_id = d.department_id
+WHERE e.salary > e.avg_salary_expense
+ORDER BY d.department_id, e.salary DESC;
+
+-- Exercise 2
+-- Get cumulative salary within each department for Finance and IT department along wiht department name
+-- employees and departments
+SELECT e.employee_id, d.department_name, e.salary, 
+	SUM(e.salary) OVER (
+		PARTITION BY e.department_id 
+		ORDER BY e.salary
+	) cum_salary_expense
+FROM employees e
+JOIN departments d
+ON e.department_id = d.department_id
+WHERE d.department_name IN ('Finance', 'IT')
+ORDER BY d.department_name, e.salary;
+
+-- Exercise 3
+-- Get top 3 paid employees within each department by salary (use dense_rank)
+-- employees and departments
+SELECT e.employee_id, e.department_id, d.department_name, e.salary, e.employee_rank 
+FROM (SELECT *, 
+		DENSE_RANK() OVER (
+			PARTITION BY e.department_id
+			ORDER BY e.salary DESC
+			) employee_rank
+	FROM employees e
+) e JOIN departments d
+ON e.department_id = d.department_id
+WHERE e.employee_rank <= 3;
+
+-- Exercise 4
+-- Get top 3 products sold in the month of 2014 January by revenue
+-- orders, order_items, products
+USE retail_db;
+GO
+
+SELECT TOP 3 p.product_id, p.product_name, oi.revenue,
+DENSE_RANK() OVER(ORDER BY oi.revenue DESC) product_rank
+FROM (SELECT oi.order_item_product_id, CAST(SUM(oi.order_item_subtotal) AS DECIMAL(18,2)) revenue
+	FROM order_items oi JOIN orders o 
+	ON o.order_id = oi.order_item_order_id
+	AND FORMAT(o.order_date, 'yyyy-MM') LIKE '2014-01'
+	AND o.order_status IN ('COMPLETE', 'CLOSED')
+	GROUP BY oi.order_item_product_id) oi JOIN products p
+ON oi.order_item_product_id = p.product_id
+ORDER BY oi.revenue DESC;
+
+-- Exercise 5
+-- Get top 3 products sold in the month of 2014 January under selected categories by revenue
+-- Cardio Equipment and Strength Training
+
+SELECT * FROM (
+	SELECT c.category_id, c.category_name, p.product_id, p.product_name,
+	SUM(oi.order_item_subtotal) revenue, 
+	DENSE_RANK() OVER (PARTITION BY c.category_id ORDER BY SUM(oi.order_item_subtotal) DESC) product_rank
+	FROM categories c JOIN products p ON c.category_id = p.product_category_id
+	JOIN order_items oi ON p.product_id = oi.order_item_product_id
+	JOIN orders o on oi.order_item_order_id = o.order_id
+	AND FORMAT(o.order_date, 'yyyy-MM') LIKE '2014-01'
+	AND o.order_status IN ('COMPLETE', 'CLOSED')
+	AND (c.category_name LIKE 'Cardio Equipment%' OR c.category_name LIKE 'Strength Training%')
+	GROUP BY p.product_id, c.category_id, c.category_name, p.product_id, p.product_name
+	) r 
+WHERE r.product_rank <= 3
+ORDER BY r.category_id, r.revenue DESC;
