@@ -423,3 +423,49 @@ SELECT * FROM (
 	) r 
 WHERE r.product_rank <= 3
 ORDER BY r.category_id, r.revenue DESC;
+
+-- E09 AdventureWorks Exercises
+USE AdventureWorks2022;
+GO
+
+-- Basic Queries
+-- Select all products
+SELECT [Name], [ProductNumber] FROM Production.Product;
+
+-- Select all employees and their job titles
+SELECT p.FirstName, p.LastName, e.JobTitle FROM HumanResources.Employee e JOIN Person.Person p ON p.BusinessEntityID = e.BusinessEntityID;
+
+-- List all sales orders from a specific customer (CustomerID = 295)
+SELECT * FROM Sales.Customer c WHERE c.CustomerID = 295;
+SELECT * FROM Sales.SalesOrderHeader sh ORDER BY CustomerID;
+
+SELECT FirstColumnHeading = 'xyz',  
+       SecondColumnHeading = ProductID  
+FROM Production.Product;  
+GO  
+
+SELECT 170 & 75;
+
+-- Uses AdventureWorks  
+  
+IF OBJECT_ID ('dbo.Gloves', 'U') IS NOT NULL  
+DROP TABLE dbo.Gloves;  
+GO  
+-- Create Gloves table.  
+SELECT ProductModelID, Name  
+INTO dbo.Gloves  
+FROM Production.ProductModel  
+WHERE ProductModelID IN (3, 4);  
+GO  
+  
+-- Here is the simple union.  
+-- Uses AdventureWorks  
+  
+SELECT ProductModelID, Name  
+FROM Production.ProductModel  
+WHERE ProductModelID NOT IN (3, 4)  
+UNION  
+SELECT ProductModelID, Name  
+FROM dbo.Gloves  
+ORDER BY Name;  
+GO
